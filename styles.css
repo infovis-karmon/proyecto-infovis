@@ -49,10 +49,7 @@ body {
 .viz-header {
   padding: 28px 68px 0;
   flex: 0 0 auto;
-}
-
-.viz-header.centered {
-  text-align: center;
+  text-align: left;
 }
 
 .viz-header h1 {
@@ -66,24 +63,27 @@ body {
   margin: 12px 0 0;
   max-width: 760px;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1.35;
+  font-size: 20px;
+  line-height: 1.5;
 }
 
 .viz-main {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 250px minmax(760px, 1fr);
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
   align-items: center;
-  justify-content: center;
+  justify-items: center;
   padding: 16px 60px 42px;
 }
+
+
 
 .timeline-panel {
   position: relative;
   width: min(980px, 100%);
+  margin-inline: auto;
   display: grid;
   /* rows: top notes, top groups, top connectors, center line, bottom connectors, bottom groups, bottom notes */
   /* rows: top notes, top groups, top connectors, center line, bottom connectors, bottom groups, bottom notes (fixed) */
