@@ -12,9 +12,15 @@
     <main class="app-shell">
       <section class="viz-card">
         <header class="viz-header">
-          <h1>Top 3 agentes más elegidos del VCT por año</h1>
+          <h1>
+            <span class="title-valorant">Top 3 agentes</span>
+            <span class="title-rest">más elegidos del VCT por año</span>
+          </h1>
           <p class="viz-subtitle">
-            De acuerdo a índice de elección de agente (“pickrate”) para todos los mapas jugados en los eventos de Valorant Champions Tour 2021-2025
+            De acuerdo al “pickrate” para todos los mapas jugados en los eventos de Valorant Champions Tour 2021-2025.
+          </p>
+          <p class="viz-text">
+            El "pickrate" se refiere al porcentaje de veces que un agente es seleccionado para un mapa en comparación con el total de selecciones y su variación está influenciada por cambios en parches y estrategias del juego competitivo.
           </p>
         </header>
 
@@ -46,10 +52,16 @@
             <div id="timelineBottomNotes" class="timeline-notes timeline-notes-bottom" aria-hidden="true"></div>
           </section>
         </section>
+
+        <p class="timeline-disclaimer">
+          *Se muestra el top 3 para simplificar la lectura y destacar los agentes más relevantes por año.
+        </p>
+
         <!-- Info row: Top 3 Global + explanatory note -->
         <section class="info-row">
           <div class="top-global">
-            <h3>Top 3 Global</h3>
+            <h3>Top 3 Historico</h3>
+            <p id="overallMapsNote" class="top-global-note">Basado en mapas no disponibles</p>
             <div class="top-items">
               <div class="top-item">
                 <img src="assets/Jett-icon.png" alt="Jett" />
@@ -77,10 +89,14 @@
 
           <aside class="explain-note">
             <p>
-              La variación de "pickrate" se determina por los diversos parches que realiza la publicadora Riot Games, con tal de balancear el juego. Esto, junto con nuevos mapas y estrategias, inflinge en el porcentaje.
+              A pesar de estos cambios estratégicos, Jett se mantiene como el agente más dominante históricamente, evidenciando su relevancia sostenida en el meta competitivo.
             </p>
           </aside>
         </section>
+
+        <div class="source-strip"> Fuente:
+          <a href="https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data" target="_blank" rel="noopener noreferrer">Kaggle - Valorant Champion Tour Data </a>
+          </div>
       </section>
     </main>
 

@@ -18,6 +18,8 @@ const topNotes = document.getElementById("timelineTopNotes");
 const bottomNotes = document.getElementById("timelineBottomNotes");
 const yearNodesContainer = document.getElementById("yearNodes");
 const overallContainer = document.getElementById("overallBubbles");
+const overallMapsNote = document.getElementById("overallMapsNote");
+const overallTopItems = Array.from(document.querySelectorAll(".top-global .top-item"));
 
 boot();
 
@@ -42,6 +44,8 @@ async function boot() {
 
     renderTimeline(loadedYears, yearlyMapCounts);
     renderOverall(overall, maxDisplayedRate);
+    renderOverallSummary(overall);
+    renderOverallMapsNote(yearlyMapCounts);
   } catch (error) {
     if (timelineTop) timelineTop.innerHTML = `<div class="empty-state">${error.message}<br><br>Si abriste el HTML con doble clic, prueba servir la carpeta con un servidor local.</div>`;
     if (timelineBottom) timelineBottom.innerHTML = "";
@@ -49,6 +53,44 @@ async function boot() {
     overallContainer.innerHTML = "";
     console.error(error);
   }
+}
+
+function renderOverallSummary(entries) {
+  if (!overallTopItems.length) return;
+
+  overallTopItems.forEach((item, index) => {
+    const entry = entries[index];
+    if (!entry) return;
+
+    const img = item.querySelector("img");
+    const percent = item.querySelector(".top-percent");
+    const label = item.querySelector(".top-label");
+
+    if (img) {
+      img.src = entry.asset;
+      img.alt = capitalize(entry.agent);
+    }
+
+    if (percent) {
+      percent.textContent = formatRate(entry.average);
+    }
+
+    if (label) {
+      label.textContent = `#${index + 1} ${capitalize(entry.agent)}`;
+    }
+  });
+}
+
+function renderOverallMapsNote(yearlyMapCounts) {
+  if (!overallMapsNote) return;
+
+  const totalMaps = Object.values(yearlyMapCounts).reduce((sum, value) => {
+    const count = Number(value) || 0;
+    return sum + count;
+  }, 0);
+
+  overallMapsNote.textContent =
+    totalMaps > 0 ? `Basado en ${totalMaps} mapas` : "Basado en mapas no disponibles";
 }
 
 async function loadYearFile({ year, file }) {

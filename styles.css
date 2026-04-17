@@ -33,6 +33,13 @@ body {
   color: var(--white);
 }
 
+@font-face {
+  font-family: 'Valorant';
+  src: url('./fonts/valorant.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .app-shell,
 .viz-card {
   width: 100vw;
@@ -41,9 +48,33 @@ body {
 }
 
 .viz-card {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   overflow: visible;
+}
+
+.viz-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(30vw, 400px);
+  height: min(40vh, 300px);
+  background-image: url("assets/valorant-background.png");
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: contain;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+  padding: 50px;
+}
+
+.viz-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .viz-header {
@@ -59,12 +90,36 @@ body {
   line-height: 1.05;
 }
 
+.viz-header h1 .title-valorant,
+.viz-header h1 .title-rest {
+  display: block;
+}
+
+.viz-header h1 .title-valorant {
+  font-family: 'Valorant', Inter, Roboto, 'Open Sans', 'Segoe UI', sans-serif;
+  letter-spacing: 0.02em;
+  margin-right: 0.3em;
+}
+
+.viz-header h1 .title-rest {
+  margin-top: 0;
+}
+
 .viz-subtitle {
   margin: 12px 0 0;
   max-width: 760px;
   color: var(--muted);
   font-size: 20px;
   line-height: 1.5;
+}
+
+.viz-text {
+  margin: 12px 0 0;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .viz-main {
@@ -111,7 +166,7 @@ body {
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: var(--muted);
+  color: var(--white);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -222,6 +277,7 @@ body {
   bottom: 34px;
   transform: translateX(-50%);
   color: var(--white);
+  font-family: 'Valorant', Inter, Roboto, 'Open Sans', 'Segoe UI', sans-serif;
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -521,6 +577,13 @@ body {
   color: var(--muted);
 }
 
+.timeline-disclaimer {
+  margin: 4px 60px 0;
+  text-align: left;
+  color: rgba(180, 188, 201, 0.8);
+  font-size: 13px;
+}
+
 /* Info row: Bottom section with Top 3 Global and explanatory note */
 .info-row {
   display: grid;
@@ -540,7 +603,15 @@ body {
 .top-global h3 {
   margin: 0 0 12px 0;
   text-align: center;
-  font-size: 20px;
+  font-family: 'Valorant', Inter, Roboto, 'Open Sans', 'Segoe UI', sans-serif;
+  font-size: 25px;
+}
+
+.top-global-note {
+  margin: -4px 0 14px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(7, 36, 37, 0.75);
 }
 
 .top-items {
@@ -573,6 +644,7 @@ body {
 .top-percent {
   font-size: 26px;
   font-weight: 800;
+  font-family: 'Valorant', Inter, Roboto, 'Open Sans', 'Segoe UI', sans-serif;
 }
 
 .top-label {
@@ -600,6 +672,15 @@ body {
   line-height: 1.45;
 }
 
+.source-strip {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(245, 247, 251, 0.9);
+  font-size: 13px;
+  line-height: 1.2;
+  padding: 8px 20px;
+}
+
 /* hide decorative left bubbles next to timeline */
 .overall-bubbles {
   display: none;
@@ -607,6 +688,16 @@ body {
 
 
 @media (max-width: 920px) {
+  .timeline-disclaimer {
+    margin: 0 16px 8px;
+    font-size: 11px;
+  }
+
+  .source-strip {
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+
   .info-row {
     grid-template-columns: 1fr;
     margin: 16px;
@@ -720,8 +811,8 @@ body {
     transform: none;
     display: inline-block;
     margin: 6px 0;
-    color: var(--muted);
-    font-size: 13px;
+    color: var(--white);
+    font-size: 20px;
   }
 
   .timeline-notes-top,
@@ -750,4 +841,14 @@ body {
     font-size: 11px;
     right: 6px;
   }
+}
+
+.source-strip a {
+color: inherit;
+text-decoration: underline;
+text-underline-offset: 2px;
+}
+
+.source-strip a:hover {
+opacity: 0.85;
 }
