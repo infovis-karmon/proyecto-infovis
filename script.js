@@ -7,7 +7,6 @@ const MATCHES_FILE = "db/all_matches_games.csv";
 
 const COLORS = {
   annualBars: ["#7e232b", "#9d2e3a", "#b93945"],
-  overall: ["#7e232b", "#b93945", "#fe4553"],
 };
 
 const timelineTop = document.getElementById("timelineTop");
@@ -17,7 +16,6 @@ const bottomConnectors = document.getElementById("timelineBottomConnectors");
 const topNotes = document.getElementById("timelineTopNotes");
 const bottomNotes = document.getElementById("timelineBottomNotes");
 const yearNodesContainer = document.getElementById("yearNodes");
-const overallContainer = document.getElementById("overallBubbles");
 const overallMapsNote = document.getElementById("overallMapsNote");
 const overallTopItems = Array.from(document.querySelectorAll(".top-global .top-item"));
 
@@ -37,20 +35,13 @@ async function boot() {
     }
 
     const overall = aggregateOverall(loadedYears);
-    const maxDisplayedRate = Math.max(
-      ...loadedYears.flatMap((yearBlock) => yearBlock.topAgents.map((entry) => entry.average)),
-      ...overall.map((entry) => entry.average)
-    );
-
     renderTimeline(loadedYears, yearlyMapCounts);
-    renderOverall(overall, maxDisplayedRate);
     renderOverallSummary(overall);
     renderOverallMapsNote(yearlyMapCounts);
   } catch (error) {
     if (timelineTop) timelineTop.innerHTML = `<div class="empty-state">${error.message}<br><br>Si abriste el HTML con doble clic, prueba servir la carpeta con un servidor local.</div>`;
     if (timelineBottom) timelineBottom.innerHTML = "";
     yearNodesContainer.innerHTML = "";
-    overallContainer.innerHTML = "";
     console.error(error);
   }
 }
@@ -291,12 +282,10 @@ function renderTimeline(years, yearlyMapCounts) {
       stack.appendChild(row);
     });
 
-    // create a connector element in the dedicated connector row
     const connectorEl = document.createElement("div");
     connectorEl.className = "year-connector-vertical";
     connectorEl.style.left = left;
 
-    // create a meta note entry in the top/bottom notes rows
     const metaNote = document.createElement("div");
     metaNote.className = "year-meta-note";
     metaNote.style.left = left;
@@ -374,97 +363,6 @@ function createRankBar({ entry, rank }) {
 
   row.append(media, barWrap);
   return row;
-}
-
-function renderOverall(entries, maxDisplayedRate) {
-  overallContainer.innerHTML = "";
-
-  if (!entries.length) {
-    overallContainer.innerHTML = `<div class="empty-state">No hay suficientes datos para calcular el top general.</div>`;
-    return;
-  }
-
-  const yPositions = [28, 50, 72];
-  const orderedForDepth = [...entries].sort((a, b) => a.average - b.average);
-
-  orderedForDepth.forEach((entry) => {
-    const index = entries.findIndex((item) => item.agent === entry.agent);
-    const card = document.createElement("article");
-    card.className = "overall-card";
-    card.style.top = `${yPositions[index]}%`;
-    card.style.zIndex = String(Math.round(entry.average));
-
-    const size = pickRateToDiameter(entry.average, maxDisplayedRate, "overall");
-    const bubble = createBubble({
-      entry,
-      size,
-      left: -size / 2,
-      top: -size / 2,
-      color: COLORS.overall[index % COLORS.overall.length],
-      mode: "overall",
-      zIndex: Math.round(size),
-    });
-
-    card.appendChild(bubble);
-    overallContainer.appendChild(card);
-  });
-}
-
-function createBubble({ entry, size, left, top, color, mode, zIndex = 1 }) {
-  const bubble = document.createElement("button");
-  bubble.type = "button";
-  bubble.className = `bubble ${mode}`;
-  bubble.style.setProperty("--size", `${size}px`);
-  bubble.style.setProperty("--left", `${left}px`);
-  bubble.style.setProperty("--top", `${top}px`);
-  bubble.style.setProperty("--bubble-color", color);
-  bubble.style.zIndex = String(zIndex);
-  bubble.dataset.defaultZ = String(zIndex);
-  bubble.setAttribute("aria-label", `${capitalize(entry.agent)} ${formatRate(entry.average)}`);
-
-  const img = document.createElement("img");
-  img.src = entry.asset;
-  img.alt = capitalize(entry.agent);
-  img.loading = "lazy";
-  img.addEventListener("error", () => {
-    img.classList.add("is-missing");
-  });
-
-  const fallback = document.createElement("span");
-  fallback.className = "bubble-fallback";
-  fallback.textContent = initials(entry.agent);
-  fallback.style.fontSize = `${Math.max(12, size * 0.2)}px`;
-
-  const rate = document.createElement("span");
-  rate.className = "bubble-rate";
-  rate.textContent = formatRate(entry.average);
-
-  bubble.append(img, fallback, rate);
-  bubble.addEventListener("mouseenter", () => activateBubble(bubble));
-  bubble.addEventListener("mouseleave", () => deactivateBubble(bubble));
-  bubble.addEventListener("focus", () => activateBubble(bubble));
-  bubble.addEventListener("blur", () => deactivateBubble(bubble));
-
-  return bubble;
-}
-
-function activateBubble(bubble) {
-  bubble.classList.add("is-hovered");
-  bubble.style.zIndex = "999";
-  const parentCard = bubble.closest(".overall-card");
-  if (parentCard) parentCard.style.zIndex = "999";
-}
-
-function deactivateBubble(bubble) {
-  bubble.classList.remove("is-hovered");
-  bubble.style.zIndex = bubble.dataset.defaultZ;
-  const parentCard = bubble.closest(".overall-card");
-  if (parentCard) parentCard.style.zIndex = bubble.dataset.defaultZ;
-}
-
-function pickRateToDiameter(value, maxDisplayedRate, mode) {
-  const maxDiameter = mode === "overall" ? 116 : 94;
-  return Math.sqrt(Math.max(0, value) / maxDisplayedRate) * maxDiameter;
 }
 
 function distributePositions(count) {
