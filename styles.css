@@ -419,7 +419,7 @@ body {
 
 .top-global {
   background: #1cb799;
-  color: #072425;
+  color: var(--white);
   padding: 22px;
   border-radius: 12px;
 }
@@ -435,7 +435,7 @@ body {
   margin: -4px 0 14px;
   text-align: center;
   font-size: 13px;
-  color: rgba(7, 36, 37, 0.75);
+  color: rgba(245, 247, 251, 0.85);
 }
 
 .top-items {
@@ -479,7 +479,7 @@ body {
 }
 
 .explain-note {
-  background: #b93945;
+  background: transparent;
   color: var(--white);
   padding: 22px;
   border-radius: 12px;
