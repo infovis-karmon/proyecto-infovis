@@ -8,7 +8,7 @@ const YEAR_FILES = [2021, 2022, 2023, 2024, 2025].map((year) => ({
 const MATCHES_FILE = "db/all_matches_games.csv";
 
 const COLORS = {
-  annualBars: ["#7e232b", "#9d2e3a", "#b93945"],
+  annualBars: ["#b93945", "#9d2e3a", "#7e232b"],
 };
 
 const AGENT_ROLES = {

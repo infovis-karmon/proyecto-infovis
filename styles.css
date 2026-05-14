@@ -182,6 +182,7 @@ html.has-map-background .viz-card::after {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-top: 4px;
 }
 
 .map-select-arrow {
