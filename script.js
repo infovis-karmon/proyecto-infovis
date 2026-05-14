@@ -65,6 +65,44 @@ const mapSelectMenu = document.getElementById("mapSelectMenu");
 
 const audioCache = new Map();
 
+let mainBgAudio = null;
+let currentMapAudio = null;
+let fadeInterval = null;
+
+function initMainBgAudio() {
+  if (!mainBgAudio) {
+    mainBgAudio = new Audio("assets/background/Valorant Agent.mp3");
+    mainBgAudio.loop = true;
+    mainBgAudio.volume = 0.2;
+  }
+}
+
+function fadeAudio(audio, targetVolume, duration = 1000, callback = null) {
+  if (!audio) return;
+
+  const steps = 20;
+  const stepTime = duration / steps;
+  const volumeStep = (targetVolume - audio.volume) / steps;
+
+  if (audio.fadeInterval) clearInterval(audio.fadeInterval);
+
+  audio.fadeInterval = setInterval(() => {
+    let newVolume = audio.volume + volumeStep;
+
+    if (newVolume < 0) newVolume = 0;
+    if (newVolume > 1) newVolume = 1;
+
+    audio.volume = newVolume;
+
+    if ((volumeStep > 0 && audio.volume >= targetVolume) ||
+      (volumeStep < 0 && audio.volume <= targetVolume)) {
+      clearInterval(audio.fadeInterval);
+      audio.volume = targetVolume;
+      if (callback) callback();
+    }
+  }, stepTime);
+}
+
 const appState = {
   yearRows: [],
   matchRows: [],
@@ -109,6 +147,80 @@ async function boot() {
   }
 }
 
+let pendingAudioAgent = null;
+let interactionListenerAdded = false;
+
+function playBackgroundMusic(mapName) {
+  initMainBgAudio();
+
+  if (!mapName || mapName === ALL_MAPS_VALUE) {
+    if (currentMapAudio) {
+      fadeAudio(currentMapAudio, 0, 1000, () => {
+        if (currentMapAudio) {
+          currentMapAudio.pause();
+          currentMapAudio = null;
+        }
+      });
+    }
+
+    if (mainBgAudio.paused) {
+      mainBgAudio.volume = 0;
+      mainBgAudio.play().catch(() => { });
+      fadeAudio(mainBgAudio, 0.2, 1000);
+    } else {
+      fadeAudio(mainBgAudio, 0.2, 1000);
+    }
+    return;
+  }
+
+  const capitalizedMap = capitalize(mapName);
+
+  if (currentMapAudio) {
+    currentMapAudio.pause();
+    currentMapAudio = null;
+  }
+
+  if (!mainBgAudio.paused) {
+    fadeAudio(mainBgAudio, 0, 1000, () => {
+      mainBgAudio.pause();
+    });
+  }
+
+  const mapAudioPath = `assets/background/Valorant ${capitalizedMap} Map Theme Music.mp3`;
+  currentMapAudio = new Audio(mapAudioPath);
+  currentMapAudio.volume = 0;
+
+  currentMapAudio.play().then(() => {
+    fadeAudio(currentMapAudio, 0.3, 1000);
+  }).catch((e) => {
+    console.warn("No se pudo reproducir la música del mapa:", e);
+  });
+
+  currentMapAudio.addEventListener('ended', () => {
+    currentMapAudio = null;
+    mainBgAudio.volume = 0;
+    mainBgAudio.play().catch(() => { });
+    fadeAudio(mainBgAudio, 0.2, 2000);
+  });
+}
+
+function handleFirstInteraction() {
+  initMainBgAudio();
+  if (mainBgAudio.paused && !currentMapAudio) {
+    mainBgAudio.volume = 0;
+    mainBgAudio.play().catch(() => { });
+    fadeAudio(mainBgAudio, 0.2, 500);
+  } else if (currentMapAudio && currentMapAudio.paused) {
+    currentMapAudio.play().catch(() => { });
+  }
+
+  if (pendingAudioAgent) {
+    playAgentAudio(pendingAudioAgent).catch(() => { });
+    pendingAudioAgent = null;
+  }
+  document.removeEventListener("click", handleFirstInteraction);
+  document.removeEventListener("keydown", handleFirstInteraction);
+}
 function updateVisualization() {
   if (appState.yearRows.length === 0) return;
 
@@ -142,6 +254,7 @@ function updateVisualization() {
 
   if (overall.length > 0) {
     const topAgent = overall[0].agent;
+    playBackgroundMusic(appState.selectedMap);
     const playPromise = playAgentAudio(topAgent);
     if (playPromise) {
       playPromise.catch(() => {
@@ -806,7 +919,7 @@ function getAudio(agentName) {
 
   if (!audioCache.has(key)) {
     const audio = new Audio(getAudioPath(agentName));
-    audio.volume = 0.7;
+    audio.volume = 1.0;
     audio.preload = "auto";
     audioCache.set(key, audio);
   }
