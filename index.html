@@ -1,38 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Valorant · Pick rates por año</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app-shell">
-      <section class="viz-card">
-        <header class="viz-header">
-          <h1>
-            <span class="title-valorant">Top 3 agentes</span>
-            <span class="title-rest">más elegidos del VCT por año</span>
-          </h1>
-          <p class="viz-subtitle">
-            De acuerdo al “pickrate” para todos los mapas jugados en los eventos de Valorant Champions Tour 2021-2025.
-          </p>
-          <p class="viz-text">
-            El "pickrate" se refiere al porcentaje de veces que un agente es seleccionado para un mapa en comparación con el total de selecciones y su variación está influenciada por cambios en parches y estrategias del juego competitivo.
-          </p>
-        </header>
 
-        <section class="viz-main">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valorant · Pick rates por año</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="app-shell">
+    <section class="viz-card">
+      <header class="viz-header">
+        <div class="header-copy">
+          <div class="title-row">
+            <h1 class="main-title">TOP 3 AGENTES MÁS ELEGIDOS DEL VCT POR AÑO EN</h1>
+
+            <div class="map-dropdown" id="mapDropdown">
+              <button id="mapSelectButton" class="map-select-trigger" type="button" aria-haspopup="listbox"
+                aria-expanded="false">
+                <span id="mapSelectLabel">TODOS LOS MAPAS</span>
+                <span class="map-select-arrow" aria-hidden="true"></span>
+              </button>
+
+              <div id="mapSelectMenu" class="map-select-menu" role="listbox" aria-label="Seleccionar mapa"></div>
+            </div>
+          </div>
+
+          <div class="subtitle-group">
+            <p class="viz-subtitle">
+              De acuerdo al “pickrate” para los mapas jugados en los eventos de Valorant Champions Tour 2021-2025.
+            </p>
+
+            <p class="viz-text">
+              El "pickrate" se refiere al porcentaje de veces que un agente es seleccionado para un mapa en comparación
+              con el total de selecciones. Su variación está influenciada por cambios en parches y estrategias del juego
+              competitivo.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="viz-main">
+        <aside class="summary-panel" aria-label="Top 3 histórico">
+          <div class="podium-heading">
+            <h2>Top 3 Histórico</h2>
+          </div>
+
+          <section class="top-global podium-card">
+            <div class="top-items podium-items">
+              <div class="top-item">
+                <img src="assets/full/Jett_Artwork_Full.webp" alt="Jett" />
+                <div class="top-meta">
+                  <div class="top-percent">50.8%</div>
+                  <div class="top-label">#1 Jett <img src="assets/DuelistClassSymbol.webp" alt="Role" class="role-icon"></div>
+                </div>
+              </div>
+
+              <div class="top-item">
+                <img src="assets/full/Omen_Artwork_Full.webp" alt="Omen" />
+                <div class="top-meta">
+                  <div class="top-percent">50.2%</div>
+                  <div class="top-label">#2 Omen <img src="assets/ControllerClassSymbol.webp" alt="Role" class="role-icon"></div>
+                </div>
+              </div>
+
+              <div class="top-item">
+                <img src="assets/full/Sova_Artwork_Full.webp" alt="Sova" />
+                <div class="top-meta">
+                  <div class="top-percent">49.8%</div>
+                  <div class="top-label">#3 Sova <img src="assets/InitiatorClassSymbol.webp" alt="Role" class="role-icon"></div>
+                </div>
+              </div>
+            </div>
+
+            <p id="overallMapsNote" class="maps-note podium-maps-note">
+              Basado en 26943 mapas
+            </p>
+          </section>
+
+        </aside>
+
+        <section class="timeline-wrapper" aria-label="Top 3 por año">
+          <div class="timeline-heading">
+            <h2>Top 3 Por Año</h2>
+          </div>
+
           <section class="timeline-panel" aria-labelledby="timeline-title">
             <h2 id="timeline-title" class="sr-only">Línea de tiempo</h2>
 
-            <div id="timelineTopNotes" class="timeline-notes timeline-notes-top" aria-hidden="true"></div>
-
             <div id="timelineTop" class="timeline-years-top" aria-hidden="true"></div>
 
-            <div id="timelineTopConnectors" class="timeline-connectors timeline-connectors-top" aria-hidden="true"></div>
+            <div id="timelineTopConnectors" class="timeline-connectors timeline-connectors-top" aria-hidden="true">
+            </div>
 
             <div class="timeline-line" id="timelineLine" aria-hidden="true">
               <span class="line-core"></span>
@@ -40,61 +105,25 @@
               <div id="yearNodes" class="year-nodes" aria-hidden="true"></div>
             </div>
 
-            <div id="timelineBottomConnectors" class="timeline-connectors timeline-connectors-bottom" aria-hidden="true"></div>
+            <div id="timelineBottomConnectors" class="timeline-connectors timeline-connectors-bottom"
+              aria-hidden="true"></div>
 
             <div id="timelineBottom" class="timeline-years-bottom" aria-hidden="true"></div>
-
-            <div id="timelineBottomNotes" class="timeline-notes timeline-notes-bottom" aria-hidden="true"></div>
           </section>
         </section>
-
-        <p class="timeline-disclaimer">
-          *Se muestra el top 3 para simplificar la lectura y destacar los agentes más relevantes por año.
-        </p>
-
-        <!-- Info Row -->
-        <section class="info-row">
-          <div class="top-global">
-            <h3>Top 3 Historico</h3>
-            <p id="overallMapsNote" class="top-global-note">Basado en mapas no disponibles</p>
-            <div class="top-items">
-              <div class="top-item">
-                <img src="assets/Jett-icon.png" alt="Jett" />
-                <div class="top-meta">
-                  <div class="top-percent">41,2%</div>
-                  <div class="top-label">#1 Jett</div>
-                </div>
-              </div>
-              <div class="top-item">
-                <img src="assets/Omen-icon.png" alt="Omen" />
-                <div class="top-meta">
-                  <div class="top-percent">41,2%</div>
-                  <div class="top-label">#2 Omen</div>
-                </div>
-              </div>
-              <div class="top-item">
-                <img src="assets/Sova-icon.png" alt="Sova" />
-                <div class="top-meta">
-                  <div class="top-percent">41,2%</div>
-                  <div class="top-label">#3 Sova</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <aside class="explain-note">
-            <p>
-              A pesar de estos cambios estratégicos, Jett se mantiene como el agente más dominante históricamente, evidenciando su relevancia sostenida en el meta competitivo.
-            </p>
-          </aside>
-        </section>
-
-        <div class="source-strip"> Fuente:
-          <a href="https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data" target="_blank" rel="noopener noreferrer">Kaggle - Valorant Champion Tour Data </a>
-          </div>
       </section>
-    </main>
 
-    <script src="script.js"></script>
-  </body>
+      <footer class="source-strip">
+        Fuente:
+        <a href="https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data" target="_blank"
+          rel="noopener noreferrer">
+          Kaggle - Valorant Champion Tour Data
+        </a>
+      </footer>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+
 </html>
