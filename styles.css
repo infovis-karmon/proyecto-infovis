@@ -300,6 +300,7 @@ body {
   position: absolute;
   width: 340px;
   transform: translateX(-50%);
+  overflow: visible;
 }
 
 .year-connector {
@@ -333,6 +334,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: visible;
 }
 
 .rank-row {
@@ -340,6 +342,8 @@ body {
   grid-template-columns: 38px 1fr;
   gap: 12px;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .rank-media {
@@ -347,6 +351,7 @@ body {
   height: 38px;
   position: relative;
   flex: 0 0 38px;
+  overflow: visible;
 }
 
 .rank-avatar,
@@ -359,6 +364,20 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.72);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
   background: rgba(255, 255, 255, 0.08);
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+  transform-origin: center;
+  cursor: pointer;
+}
+
+.rank-row:hover .rank-avatar,
+.rank-avatar:hover {
+  transform: scale(1.5);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+.rank-row:hover .rank-avatar-fallback,
+.rank-avatar-fallback:hover {
+  transform: scale(1.5);
 }
 
 .rank-avatar-fallback {
@@ -496,7 +515,11 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 160ms ease, filter 160ms ease;
+  transition: opacity 160ms ease, filter 160ms ease, transform 200ms ease;
+}
+
+.bubble img:hover {
+  transform: scale(1.15);
 }
 
 .bubble.overall img {
@@ -619,6 +642,7 @@ body {
   gap: 18px;
   justify-content: space-around;
   align-items: center;
+  overflow: visible;
 }
 
 .top-item {
@@ -626,6 +650,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  overflow: visible;
 }
 
 .top-item img {
@@ -635,6 +660,15 @@ body {
   object-fit: cover;
   border: 0; /* remove the small circular border */
   box-shadow: none;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  cursor: pointer;
+}
+
+.top-item img:hover {
+  transform: scale(1.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 50;
 }
 
 .top-meta {

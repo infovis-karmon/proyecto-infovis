@@ -46,6 +46,11 @@ async function boot() {
     renderOverall(overall, maxDisplayedRate);
     renderOverallSummary(overall);
     renderOverallMapsNote(yearlyMapCounts);
+
+    document.querySelectorAll(".top-item img").forEach((img) => {
+      const agentName = img.alt.toLowerCase();
+      attachAudioListener(img, agentName);
+    });
   } catch (error) {
     if (timelineTop) timelineTop.innerHTML = `<div class="empty-state">${error.message}<br><br>Si abriste el HTML con doble clic, prueba servir la carpeta con un servidor local.</div>`;
     if (timelineBottom) timelineBottom.innerHTML = "";
@@ -328,6 +333,7 @@ function createRankBar({ entry, rank }) {
   img.alt = capitalize(entry.agent);
   img.loading = "lazy";
   img.className = "rank-avatar";
+  attachAudioListener(row, entry.agent);
 
   const fallback = document.createElement("span");
   fallback.className = "rank-avatar-fallback";
@@ -426,6 +432,7 @@ function createBubble({ entry, size, left, top, color, mode, zIndex = 1 }) {
   img.src = entry.asset;
   img.alt = capitalize(entry.agent);
   img.loading = "lazy";
+  attachAudioListener(img, entry.agent);
   img.addEventListener("error", () => {
     img.classList.add("is-missing");
   });
@@ -505,6 +512,34 @@ function assetPath(agent) {
     .join("");
 
   return `assets/${filename}-icon.png`;
+}
+
+function getAudioPath(agentName) {
+  const filename = String(agentName)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/gi, " ")
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1).toLowerCase())
+    .join("");
+
+  return `assets/${filename.toLowerCase()}.mp3`;
+}
+
+function playAgentAudio(agentName) {
+  const audioPath = getAudioPath(agentName);
+  const audio = new Audio(audioPath);
+  audio.volume = 0.7;
+  audio.play().catch((err) => {
+    console.warn(`No se pudo reproducir ${audioPath}:`, err);
+  });
+}
+
+function attachAudioListener(imgElement, agentName) {
+  imgElement.addEventListener("mouseenter", () => {
+    playAgentAudio(agentName);
+  });
 }
 
 function average(values) {
