@@ -980,7 +980,7 @@ html.has-map-background .viz-card::after {
     width: clamp(230px, 24vw, 290px);
   }
 
-  .top-item img {
+  .top-item > img {
     bottom: calc(clamp(102px, var(--podium-height, 142px), 178px) + var(--podium-image-gap));
     width: 185%;
     height: clamp(185px, 29vh, 285px);
@@ -1032,7 +1032,7 @@ html.has-map-background .viz-card::after {
     padding-top: clamp(14px, 2.2vh, 26px);
   }
 
-  .top-item img {
+  .top-item > img {
     bottom: calc(clamp(90px, var(--podium-height, 124px), 150px) + var(--podium-image-gap));
     width: 185%;
     height: clamp(170px, 26vh, 238px);
@@ -1065,7 +1065,11 @@ html.has-map-background .viz-card::after {
   body,
   .app-shell,
   .viz-card {
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
   }
 
   .viz-header {
@@ -1118,7 +1122,7 @@ html.has-map-background .viz-card::after {
     grid-template-columns: 1fr;
     gap: 8px;
     align-items: start;
-    padding: 4px 14px 6px;
+    padding: 4px 14px 40px;
   }
 
   .summary-panel {
@@ -1144,7 +1148,7 @@ html.has-map-background .viz-card::after {
     flex: 1 1 0;
   }
 
-  .top-item img {
+  .top-item > img {
     position: static;
     transform: none;
     width: 130%;
@@ -1152,7 +1156,7 @@ html.has-map-background .viz-card::after {
     margin-bottom: 4px;
   }
 
-  .top-item:hover img {
+  .top-item:hover > img {
     transform: scale(1.08);
   }
 
@@ -1178,6 +1182,11 @@ html.has-map-background .viz-card::after {
     font-size: clamp(8px, 2.7vw, 11px);
   }
 
+  .role-icon {
+    width: clamp(10px, 2.5vw, 14px);
+    height: clamp(10px, 2.5vw, 14px);
+  }
+
   .timeline-wrapper {
     padding-top: 0;
   }
@@ -1185,9 +1194,8 @@ html.has-map-background .viz-card::after {
   .timeline-panel {
     width: 100%;
     height: auto;
-    max-height: 50vh;
     display: block;
-    overflow: hidden;
+    overflow: visible;
     transform: none;
   }
 
@@ -1279,7 +1287,7 @@ html.has-map-background .viz-card::after {
     gap: 5px;
   }
 
-  .top-item img {
+  .top-item > img {
     width: 125%;
     height: 80px;
   }
@@ -1295,6 +1303,11 @@ html.has-map-background .viz-card::after {
 
   .top-label {
     font-size: 8px;
+  }
+
+  .role-icon {
+    width: 10px;
+    height: 10px;
   }
 
   .timeline-panel {
