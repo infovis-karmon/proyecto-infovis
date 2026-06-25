@@ -70,11 +70,8 @@ let currentMapAudio = null;
 let fadeInterval = null;
 
 function initMainBgAudio() {
-  if (!mainBgAudio) {
-    mainBgAudio = new Audio("assets/background/Valorant Agent.mp3");
-    mainBgAudio.loop = true;
-    mainBgAudio.volume = 0.2;
-  }
+  // Se deja como no-op para mantener compatibilidad con el resto del código.
+  // La música general "Valorant Agent.mp3" fue retirada: solo quedan audios de mapas y agentes.
 }
 
 function fadeAudio(audio, targetVolume, duration = 1000, callback = null) {
@@ -151,66 +148,60 @@ let pendingAudioAgent = null;
 let interactionListenerAdded = false;
 
 function playBackgroundMusic(mapName) {
-  initMainBgAudio();
+  const hasSpecificMap = mapName && mapName !== ALL_MAPS_VALUE;
 
-  if (!mapName || mapName === ALL_MAPS_VALUE) {
+  if (!hasSpecificMap) {
     if (currentMapAudio) {
-      fadeAudio(currentMapAudio, 0, 1000, () => {
-        if (currentMapAudio) {
-          currentMapAudio.pause();
-          currentMapAudio = null;
-        }
+      const audioToStop = currentMapAudio;
+      currentMapAudio = null;
+
+      fadeAudio(audioToStop, 0, 700, () => {
+        audioToStop.pause();
+        audioToStop.currentTime = 0;
       });
     }
 
-    if (mainBgAudio.paused) {
-      mainBgAudio.volume = 0;
-      mainBgAudio.play().catch(() => { });
-      fadeAudio(mainBgAudio, 0.2, 1000);
-    } else {
-      fadeAudio(mainBgAudio, 0.2, 1000);
-    }
     return;
   }
 
-  const capitalizedMap = capitalize(mapName);
+  const normalizedMap = String(mapName).trim().toLowerCase();
 
-  if (currentMapAudio) {
-    currentMapAudio.pause();
-    currentMapAudio = null;
+  if (currentMapAudio?.dataset?.map === normalizedMap) {
+    if (currentMapAudio.paused) {
+      currentMapAudio.play().catch((error) => {
+        console.warn("No se pudo reanudar la música del mapa:", error);
+      });
+    }
+
+    fadeAudio(currentMapAudio, 0.3, 600);
+    return;
   }
 
-  if (!mainBgAudio.paused) {
-    fadeAudio(mainBgAudio, 0, 1000, () => {
-      mainBgAudio.pause();
+  if (currentMapAudio) {
+    const previousAudio = currentMapAudio;
+    fadeAudio(previousAudio, 0, 500, () => {
+      previousAudio.pause();
+      previousAudio.currentTime = 0;
     });
   }
 
+  const capitalizedMap = capitalize(mapName);
   const mapAudioPath = `assets/background/Valorant ${capitalizedMap} Map Theme Music.mp3`;
+
   currentMapAudio = new Audio(mapAudioPath);
+  currentMapAudio.dataset.map = normalizedMap;
+  currentMapAudio.loop = true;
   currentMapAudio.volume = 0;
 
   currentMapAudio.play().then(() => {
     fadeAudio(currentMapAudio, 0.3, 1000);
-  }).catch((e) => {
-    console.warn("No se pudo reproducir la música del mapa:", e);
-  });
-
-  currentMapAudio.addEventListener('ended', () => {
-    currentMapAudio = null;
-    mainBgAudio.volume = 0;
-    mainBgAudio.play().catch(() => { });
-    fadeAudio(mainBgAudio, 0.2, 2000);
+  }).catch((error) => {
+    console.warn("No se pudo reproducir la música del mapa:", error);
   });
 }
 
 function handleFirstInteraction() {
-  initMainBgAudio();
-  if (mainBgAudio.paused && !currentMapAudio) {
-    mainBgAudio.volume = 0;
-    mainBgAudio.play().catch(() => { });
-    fadeAudio(mainBgAudio, 0.2, 500);
-  } else if (currentMapAudio && currentMapAudio.paused) {
+  if (currentMapAudio && currentMapAudio.paused) {
     currentMapAudio.play().catch(() => { });
   }
 
@@ -218,9 +209,12 @@ function handleFirstInteraction() {
     playAgentAudio(pendingAudioAgent).catch(() => { });
     pendingAudioAgent = null;
   }
+
   document.removeEventListener("click", handleFirstInteraction);
   document.removeEventListener("keydown", handleFirstInteraction);
+  interactionListenerAdded = false;
 }
+
 function updateVisualization() {
   if (appState.yearRows.length === 0) return;
 
@@ -230,15 +224,21 @@ function updateVisualization() {
 
   const overall = aggregateOverall(loadedYears);
   const yearlyMapCounts = getYearlyMapCounts(appState.matchRows, appState.selectedMap);
+  const mapCountScaleMax = getMaxMapCountForVisualScale(yearlyMapCounts);
 
-  renderTimeline(loadedYears, yearlyMapCounts);
+  renderTimeline(loadedYears, yearlyMapCounts, mapCountScaleMax);
   renderOverallSummary(overall);
-  renderOverallMapsNote(yearlyMapCounts);
+  renderOverallMapsNote(yearlyMapCounts, mapCountScaleMax);
   updateMapBackground(appState.selectedMap);
 
-  const selectedOption = appState.mapOptions.find(opt => opt.value === appState.selectedMap);
+  const selectedOption = appState.mapOptions.find(
+    (option) => option.value === appState.selectedMap
+  );
+
   if (selectedOption) {
-    const mapName = appState.selectedMap === ALL_MAPS_VALUE ? "todos los mapas" : selectedOption.label;
+    const mapName =
+      appState.selectedMap === ALL_MAPS_VALUE ? "todos los mapas" : selectedOption.label;
+
     const capitalizedMap = capitalize(mapName);
 
     const podiumH2 = document.querySelector(".podium-heading h2");
@@ -247,6 +247,7 @@ function updateVisualization() {
     if (podiumH2) {
       podiumH2.innerHTML = `<span style="color: #00f2ff;">TOP 3</span> HISTÓRICO EN<br>${capitalizedMap}`;
     }
+
     if (timelineH2) {
       timelineH2.innerHTML = `<span style="color: #ff4655;">TOP 3</span> POR AÑO EN<br>${capitalizedMap}`;
     }
@@ -254,11 +255,15 @@ function updateVisualization() {
 
   if (overall.length > 0) {
     const topAgent = overall[0].agent;
+
     playBackgroundMusic(appState.selectedMap);
+
     const playPromise = playAgentAudio(topAgent);
+
     if (playPromise) {
       playPromise.catch(() => {
         pendingAudioAgent = topAgent;
+
         if (!interactionListenerAdded) {
           document.addEventListener("click", handleFirstInteraction);
           document.addEventListener("keydown", handleFirstInteraction);
@@ -458,13 +463,16 @@ function getPodiumHeight(value, minValue, maxValue) {
   return normalized * maxHeight;
 }
 
-function renderOverallMapsNote(yearlyMapCounts) {
+function renderOverallMapsNote(yearlyMapCounts, maxCountForScale = 1) {
   if (!overallMapsNote) return;
 
   const totalMaps = Number(yearlyMapCounts.__total) || 0;
 
-  overallMapsNote.textContent =
-    totalMaps > 0 ? `Basado en ${totalMaps} mapas` : "Basado en 0 mapas";
+  renderMapsNote({
+    container: overallMapsNote,
+    count: totalMaps,
+    maxCount: maxCountForScale,
+  });
 }
 
 async function loadYearRows({ year, file }) {
@@ -528,6 +536,48 @@ function getYearlyMapCounts(rows, selectedMap) {
   });
 
   return counts;
+}
+
+function getMaxMapCountForVisualScale(yearlyMapCounts) {
+  const values = [Number(yearlyMapCounts.__total) || 0];
+
+  YEAR_FILES.forEach(({ year }) => {
+    values.push(Number(yearlyMapCounts[year]) || 0);
+  });
+
+  return Math.max(1, ...values);
+}
+
+function getMapCountVisualScale(count, maxCount) {
+  return 1;
+}
+
+function renderMapsNote({ container, count, maxCount }) {
+  if (!container) return;
+
+  const safeCount = Math.max(Number(count) || 0, 0);
+  const scale = getMapCountVisualScale(safeCount, maxCount);
+
+  container.style.setProperty("--maps-number-scale", scale.toFixed(3));
+  container.innerHTML = "";
+
+  const prefix = document.createElement("span");
+  prefix.className = "maps-note-prefix";
+  prefix.textContent = "Basado en";
+
+  const number = document.createElement("span");
+  number.className = "maps-note-number";
+  number.textContent = formatInteger(safeCount);
+
+  const suffix = document.createElement("span");
+  suffix.className = "maps-note-suffix";
+  suffix.textContent = safeCount === 1 ? "mapa" : "mapas";
+
+  container.append(prefix, number, suffix);
+}
+
+function formatInteger(value) {
+  return new Intl.NumberFormat("es-CL").format(Number(value) || 0);
 }
 
 function parseCSV(text) {
@@ -669,7 +719,7 @@ function aggregateOverall(years) {
     .slice(0, 3);
 }
 
-function renderTimeline(years, yearlyMapCounts) {
+function renderTimeline(years, yearlyMapCounts, maxCountForScale = 1) {
   if (timelineTop) timelineTop.innerHTML = "";
   if (timelineBottom) timelineBottom.innerHTML = "";
   if (topConnectors) topConnectors.innerHTML = "";
@@ -682,45 +732,74 @@ function renderTimeline(years, yearlyMapCounts) {
     const isAbove = index % 2 === 1;
     const left = `${positions[index]}%`;
     const mapCount = yearlyMapCounts[block.year] || 0;
+    const agentsForYear = block.allAgents?.length ? block.allAgents : block.topAgents;
 
     const yearNode = document.createElement("div");
-    yearNode.className = `year-node ${isAbove ? "year-node-label-below" : "year-node-label-above"
-      }`;
+
+    yearNode.className = `year-node ${
+      isAbove ? "year-node-label-below" : "year-node-label-above"
+    }`;
+
     yearNode.style.left = left;
+
     yearNode.innerHTML = `
       <span class="year-label">${block.year}</span>
       <span class="year-dot"></span>
     `;
+
     yearNodesContainer.appendChild(yearNode);
 
     const group = document.createElement("article");
+
     group.className = `year-group ${isAbove ? "above" : "below"}`;
+    group.dataset.year = String(block.year);
     group.style.left = left;
 
     const stack = document.createElement("div");
-    stack.className = "bar-stack";
 
-    if (block.topAgents.length) {
-      block.topAgents.forEach((agent, rank) => {
+    stack.className = "bar-stack all-agents-stack";
+    stack.tabIndex = 0;
+
+    stack.setAttribute(
+      "aria-label",
+      `Ranking completo de agentes para ${block.year}. Por defecto se ven los 3 primeros; usa scroll para ver el resto.`
+    );
+
+    if (agentsForYear.length) {
+      agentsForYear.forEach((agent, rank) => {
         const row = createRankBar({
           entry: agent,
           rank,
+          total: agentsForYear.length,
         });
+
+        if (rank < 3) {
+          row.classList.add("is-top-agent");
+        }
 
         stack.appendChild(row);
       });
     } else {
       const empty = document.createElement("div");
+
       empty.className = "year-empty";
       empty.textContent = "Mapa no disponible este año";
+
       stack.appendChild(empty);
     }
 
     const metaNote = document.createElement("div");
+
     metaNote.className = "year-meta-note maps-note";
-    metaNote.textContent = `Basado en ${mapCount} mapas`;
+
+    renderMapsNote({
+      container: metaNote,
+      count: mapCount,
+      maxCount: maxCountForScale,
+    });
 
     const connectorEl = document.createElement("div");
+
     connectorEl.className = "year-connector-vertical";
     connectorEl.style.left = left;
 
@@ -737,7 +816,18 @@ function renderTimeline(years, yearlyMapCounts) {
   });
 }
 
-function createRankBar({ entry, rank }) {
+function getRankBarColor(rank, total) {
+  const safeTotal = Math.max(Number(total) || 1, 1);
+  const ratio = safeTotal <= 1 ? 0 : rank / (safeTotal - 1);
+
+  const hue = 355;
+  const saturation = 88 - ratio * 8;
+  const lightness = 66 - ratio * 34;
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+function createRankBar({ entry, rank, total = 1 }) {
   const row = document.createElement("div");
   row.className = "rank-row";
   row.dataset.agent = entry.agent;
@@ -787,11 +877,11 @@ function createRankBar({ entry, rank }) {
 
   const bar = document.createElement("div");
   bar.className = "rank-bar";
-  bar.style.setProperty("--bar-color", COLORS.annualBars[rank % COLORS.annualBars.length]);
+  bar.style.setProperty("--bar-color", getRankBarColor(rank, total));
 
   const fill = document.createElement("div");
   fill.className = "rank-bar-fill";
-  fill.style.width = `0%`;
+  fill.style.width = "0%";
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -943,7 +1033,6 @@ function playAgentAudio(agentName) {
     return Promise.reject(error);
   }
 }
-
 
 function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;

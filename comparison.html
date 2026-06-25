@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Comparación de parametros</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="comparison-styles.css" />
+</head>
+
+<body class="comparison-body">
+  <main class="app-shell">
+    <section class="viz-card comparison-card">
+      <a class="compare-fab" href="index.html" aria-label="Regresar a la vista principal" title="Regresar">
+        <img src="assets/back.png" alt="Regresar" />
+      </a>
+
+      <header class="viz-header">
+        <div class="header-copy">
+          <div class="title-row">
+            <h1 class="main-title">COMPARACIÓN DE PARAMETROS</h1>
+          </div>
+
+          <div class="subtitle-group">
+            <p class="viz-subtitle">
+              En esta secion podrás hacer comparativas cruzadas entre los parametros agentes, año y mapa.
+            </p>
+
+            <p class="viz-text">
+              Esta vista permite comparar dos combinaciones de datos: año, agente y mapa. A partir de dos tripletas
+              seleccionadas, se muestra un diagrama de Venn para cada una, acompañado de una comparación directa de sus
+              valores.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="viz-main comparison-viz-main">
+        <aside class="summary-panel comparison-triplet-side comparison-left" aria-label="Tripleta 1">
+          <div class="podium-heading">
+            <h2>
+              <span class="triplet-title-cyan">Tripleta</span><br>
+              1
+            </h2>
+          </div>
+
+          <section class="comparison-selector-zone">
+            <div class="triplet-lock" data-triplet="one" aria-label="Selector de tripleta 1">
+              <article class="lock-slot lock-slot-year" data-field="year">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir año">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Año</span>
+                  <strong class="lock-symbol" data-symbol>?</strong>
+                  <span class="lock-value" data-value>2021</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar año">▼</button>
+              </article>
+
+              <article class="lock-slot lock-slot-map" data-field="map">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir mapa">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Mapa</span>
+                  <strong class="lock-symbol" data-symbol>0</strong>
+                  <span class="lock-value" data-value>Ascent</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar mapa">▼</button>
+              </article>
+
+              <article class="lock-slot lock-slot-agent" data-field="agent">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir agente">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Agente</span>
+                  <strong class="lock-symbol" data-symbol>A</strong>
+                  <span class="lock-value" data-value>Astra</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar agente">▼</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="venn-card" data-venn="one" aria-label="Diagrama de Venn tripleta 1">
+            <div class="venn-diagram">
+              <div class="venn-circle venn-year">
+                <span class="venn-label">Año</span>
+                <strong class="venn-main" data-venn-year>2021</strong>
+              </div>
+
+              <div class="venn-circle venn-map">
+                <img data-venn-map-img src="assets/maps/Loading_Screen_Ascent.webp" alt="Mapa seleccionado" />
+                <span class="venn-label">Mapa</span>
+                <strong class="venn-main" data-venn-map>Ascent</strong>
+              </div>
+
+              <div class="venn-circle venn-agent">
+                <img data-venn-agent-img src="assets/icons/Astra-icon.png" alt="Agente seleccionado" />
+                <span class="venn-label">Agente</span>
+                <strong class="venn-main" data-venn-agent>Astra</strong>
+              </div>
+            </div>
+          </section>
+        </aside>
+        <section class="comparison-bars-panel" aria-label="Resumen de comparación">
+        <div class="comparison-summary-heading">
+            <h2>Resumen</h2>
+        </div>
+
+        <div class="comparison-bars-list" id="comparisonBarsList"></div>
+        </section>
+
+        <section class="timeline-wrapper comparison-triplet-side comparison-right" aria-label="Tripleta 2">
+          <div class="timeline-heading">
+            <h2>
+              <span class="triplet-title-red">Tripleta</span><br>
+              2
+            </h2>
+          </div>
+
+          <section class="comparison-selector-zone">
+            <div class="triplet-lock" data-triplet="two" aria-label="Selector de tripleta 2">
+              <article class="lock-slot lock-slot-year" data-field="year">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir año">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Año</span>
+                  <strong class="lock-symbol" data-symbol>%</strong>
+                  <span class="lock-value" data-value>2025</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar año">▼</button>
+              </article>
+
+              <article class="lock-slot lock-slot-map" data-field="map">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir mapa">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Mapa</span>
+                  <strong class="lock-symbol" data-symbol>0</strong>
+                  <span class="lock-value" data-value>Ascent</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar mapa">▼</button>
+              </article>
+
+              <article class="lock-slot lock-slot-agent" data-field="agent">
+                <button class="lock-arrow lock-arrow-up" type="button" aria-label="Subir agente">▲</button>
+
+                <div class="lock-window">
+                  <span class="lock-label">Agente</span>
+                  <strong class="lock-symbol" data-symbol>O</strong>
+                  <span class="lock-value" data-value>Omen</span>
+                </div>
+
+                <button class="lock-arrow lock-arrow-down" type="button" aria-label="Bajar agente">▼</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="venn-card" data-venn="two" aria-label="Diagrama de Venn tripleta 2">
+            <div class="venn-diagram">
+              <div class="venn-circle venn-year">
+                <span class="venn-label">Año</span>
+                <strong class="venn-main" data-venn-year>2025</strong>
+              </div>
+
+              <div class="venn-circle venn-map">
+                <img data-venn-map-img src="assets/maps/Loading_Screen_Ascent.webp" alt="Mapa seleccionado" />
+                <span class="venn-label">Mapa</span>
+                <strong class="venn-main" data-venn-map>Ascent</strong>
+              </div>
+
+              <div class="venn-circle venn-agent">
+                <img data-venn-agent-img src="assets/icons/Omen-icon.png" alt="Agente seleccionado" />
+                <span class="venn-label">Agente</span>
+                <strong class="venn-main" data-venn-agent>Omen</strong>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <footer class="source-strip">
+        Fuente:
+        <a href="https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data" target="_blank"
+          rel="noopener noreferrer">
+          Kaggle - Valorant Champion Tour Data
+        </a>
+      </footer>
+    </section>
+  </main>
+
+  <script src="comparison.js"></script>
+</body>
+
+</html>
