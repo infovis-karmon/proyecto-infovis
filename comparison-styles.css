@@ -623,3 +623,27 @@
     font-size: 8px;
   }
 }
+
+/* Hover moderno y sutil para los diagramas de Venn. */
+.venn-diagram {
+  cursor: pointer;
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 180ms ease, filter 180ms ease;
+  will-change: transform;
+}
+
+.venn-diagram:hover {
+  transform: scale(1.035);
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.22));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venn-diagram {
+    transition: none;
+  }
+
+  .venn-diagram:hover {
+    transform: scale(1.015);
+  }
+}

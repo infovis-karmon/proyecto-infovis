@@ -47,6 +47,24 @@ const AGENT_SYMBOL_ALPHABET = [
 
 const STORAGE_KEY = "valorant_comparison_triplets";
 
+/* Sonidos del diagrama según el pick rate agente / mapa / año. */
+const PICK_RATE_AUDIO_BASE = "assets/audio/guns/";
+const PICK_RATE_AUDIO_FILES = [
+  "bucky.mp3",
+  "marshal.mp3",
+  "shorty.mp3",
+  "sheriff.mp3",
+  "ghost.mp3",
+  "vandal.mp3",
+  "bulldog.mp3",
+  "phantom.mp3",
+  "odin.mp3",
+  "spectre.mp3",
+];
+
+const vennAudioCache = new Map();
+let activeVennAudio = null;
+
 const FALLBACK_AGENTS = [
   "astra",
   "breach",
@@ -170,6 +188,7 @@ async function initTripletLocks() {
   }
 
   bindTripletButtons();
+  bindVennHoverAudio();
   renderAllTriplets();
 }
 
@@ -302,6 +321,18 @@ function renderVenn(triplet) {
   const agentEl = venn.querySelector("[data-venn-agent]");
   const mapImg = venn.querySelector("[data-venn-map-img]");
   const agentImg = venn.querySelector("[data-venn-agent-img]");
+  const diagram = venn.querySelector(".venn-diagram");
+
+  const pickRate = countAgentPickRate({
+    agent,
+    map,
+    year,
+  });
+
+  if (diagram) {
+    diagram.dataset.pickRate = String(clampPickRate(pickRate));
+    diagram.title = `Pick rate: ${formatRate(pickRate)}%`;
+  }
 
   if (yearEl) {
     yearEl.textContent = String(year);
@@ -324,6 +355,86 @@ function renderVenn(triplet) {
     agentImg.src = getAgentIconPath(agent);
     agentImg.alt = `Agente ${formatAgentName(agent)}`;
   }
+}
+
+/* =========================================================
+   Hover y audio de los diagramas de Venn
+   ========================================================= */
+
+function bindVennHoverAudio() {
+  document.querySelectorAll(".venn-diagram").forEach((diagram) => {
+    if (diagram.dataset.audioBound === "true") return;
+
+    diagram.dataset.audioBound = "true";
+
+    diagram.addEventListener("mouseenter", () => {
+      playVennPickRateAudio(diagram);
+    });
+
+    diagram.addEventListener("mouseleave", stopVennPickRateAudio);
+  });
+}
+
+function playVennPickRateAudio(diagram) {
+  const pickRate = clampPickRate(diagram.dataset.pickRate);
+  const audioPath = getPickRateAudioPath(pickRate);
+  const audio = getVennAudio(audioPath);
+
+  stopVennPickRateAudio();
+
+  audio.currentTime = 0;
+  audio.volume = pickRate / 100;
+  activeVennAudio = audio;
+
+  audio.play().catch((error) => {
+    if (activeVennAudio === audio) {
+      activeVennAudio = null;
+    }
+
+    console.warn(`No se pudo reproducir ${audioPath}:`, error);
+  });
+}
+
+function stopVennPickRateAudio() {
+  if (!activeVennAudio) return;
+
+  activeVennAudio.pause();
+  activeVennAudio.currentTime = 0;
+  activeVennAudio = null;
+}
+
+function getPickRateAudioPath(pickRate) {
+  const safeRate = clampPickRate(pickRate);
+  const percentileIndex = safeRate >= 100
+    ? PICK_RATE_AUDIO_FILES.length - 1
+    : Math.floor(safeRate / 10);
+
+  return `${PICK_RATE_AUDIO_BASE}${PICK_RATE_AUDIO_FILES[percentileIndex]}`;
+}
+
+function getVennAudio(audioPath) {
+  if (!vennAudioCache.has(audioPath)) {
+    const audio = new Audio(audioPath);
+    audio.preload = "auto";
+
+    audio.addEventListener("ended", () => {
+      if (activeVennAudio === audio) {
+        activeVennAudio = null;
+      }
+    });
+
+    vennAudioCache.set(audioPath, audio);
+  }
+
+  return vennAudioCache.get(audioPath);
+}
+
+function clampPickRate(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) return 0;
+
+  return Math.max(0, Math.min(numericValue, 100));
 }
 
 function renderComparisonBars() {

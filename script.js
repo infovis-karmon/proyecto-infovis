@@ -65,6 +65,23 @@ const mapSelectMenu = document.getElementById("mapSelectMenu");
 
 const audioCache = new Map();
 
+/* Sonidos asociados al pick rate de las barras. */
+const PICK_RATE_GUN_AUDIO = [
+  "bucky.mp3",
+  "marshal.mp3",
+  "shorty.mp3",
+  "sheriff.mp3",
+  "ghost.mp3",
+  "vandal.mp3",
+  "bulldog.mp3",
+  "phantom.mp3",
+  "odin.mp3",
+  "spectre.mp3",
+];
+
+const pickRateAudioCache = new Map();
+let currentPickRateAudio = null;
+
 let mainBgAudio = null;
 let currentMapAudio = null;
 let fadeInterval = null;
@@ -249,7 +266,7 @@ function updateVisualization() {
     }
 
     if (timelineH2) {
-      timelineH2.innerHTML = `<span style="color: #ff4655;">TOP 3</span> POR AÑO EN<br>${capitalizedMap}`;
+      timelineH2.innerHTML = `<span style="color: #ff4655;">TOP</span> POR AÑO EN<br>${capitalizedMap}`;
     }
   }
 
@@ -827,6 +844,50 @@ function getRankBarColor(rank, total) {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
+function getPickRateAudioFilename(pickRate) {
+  const safeRate = Math.max(0, Math.min(Number(pickRate) || 0, 100));
+  const rangeIndex = safeRate >= 100 ? 9 : Math.floor(safeRate / 10);
+
+  return PICK_RATE_GUN_AUDIO[rangeIndex];
+}
+
+function getPickRateAudio(pickRate) {
+  const filename = getPickRateAudioFilename(pickRate);
+
+  if (!pickRateAudioCache.has(filename)) {
+    const audio = new Audio(`assets/audio/guns/${filename}`);
+    audio.preload = "auto";
+
+    audio.addEventListener("ended", () => {
+      if (currentPickRateAudio === audio) {
+        currentPickRateAudio = null;
+      }
+    });
+
+    pickRateAudioCache.set(filename, audio);
+  }
+
+  return pickRateAudioCache.get(filename);
+}
+
+function playPickRateAudio(pickRate) {
+  const safeRate = Math.max(0, Math.min(Number(pickRate) || 0, 100));
+  const audio = getPickRateAudio(safeRate);
+
+  if (currentPickRateAudio) {
+    currentPickRateAudio.pause();
+    currentPickRateAudio.currentTime = 0;
+  }
+
+  currentPickRateAudio = audio;
+  audio.volume = safeRate / 100;
+  audio.currentTime = 0;
+
+  return audio.play().catch((error) => {
+    console.warn(`No se pudo reproducir el sonido del pick rate ${safeRate.toFixed(1)}%.`, error);
+  });
+}
+
 function createRankBar({ entry, rank, total = 1 }) {
   const row = document.createElement("div");
   row.className = "rank-row";
@@ -878,6 +939,34 @@ function createRankBar({ entry, rank, total = 1 }) {
   const bar = document.createElement("div");
   bar.className = "rank-bar";
   bar.style.setProperty("--bar-color", getRankBarColor(rank, total));
+  bar.tabIndex = 0;
+  bar.setAttribute("role", "button");
+  bar.setAttribute(
+    "aria-label",
+    `Reproducir sonido asociado al pick rate de ${capitalize(entry.agent)}: ${formatRate(entry.average)}`
+  );
+  bar.title = "Tanto como la cadencia de una...";
+
+  const playBarSound = () => {
+    playPickRateAudio(entry.average);
+
+    bar.classList.remove("is-playing");
+    void bar.offsetWidth;
+    bar.classList.add("is-playing");
+
+    window.setTimeout(() => {
+      bar.classList.remove("is-playing");
+    }, 220);
+  };
+
+  bar.addEventListener("click", playBarSound);
+
+  bar.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      playBarSound();
+    }
+  });
 
   const fill = document.createElement("div");
   fill.className = "rank-bar-fill";
@@ -1001,7 +1090,7 @@ function agentFilename(agent) {
 
 function getAudioPath(agentName) {
   const filename = agentFilename(agentName).toLowerCase();
-  return `assets/audio/${filename}.mp3`;
+  return `assets/audio/voices/${filename}.mp3`;
 }
 
 function getAudio(agentName) {

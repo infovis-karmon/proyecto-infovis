@@ -852,6 +852,7 @@ html.has-map-background .viz-card::after {
   position: relative;
   width: 100%;
   height: clamp(17px, 2vh, 24px);
+  cursor: pointer;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.09);
   overflow: hidden;
@@ -862,12 +863,29 @@ html.has-map-background .viz-card::after {
     box-shadow 160ms ease;
 }
 
+.rank-bar:focus-visible {
+  outline: 2px solid rgba(245, 247, 251, 0.95);
+  outline-offset: 3px;
+}
+
+.rank-bar:active,
+.rank-bar.is-playing {
+  transform: translateX(4px) scale(0.985);
+  filter: brightness(1.16);
+}
+
 .rank-row:hover .rank-bar {
   transform: translateX(4px);
   filter: brightness(1.08);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.rank-row:hover .rank-bar:active,
+.rank-row:hover .rank-bar.is-playing {
+  transform: translateX(4px) scale(0.985);
+  filter: brightness(1.16);
 }
 
 .rank-bar-fill {
