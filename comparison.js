@@ -47,24 +47,6 @@ const AGENT_SYMBOL_ALPHABET = [
 
 const STORAGE_KEY = "valorant_comparison_triplets";
 
-/* Sonidos del diagrama según el pick rate agente / mapa / año. */
-const PICK_RATE_AUDIO_BASE = "assets/audio/guns/";
-const PICK_RATE_AUDIO_FILES = [
-  "bucky.mp3",
-  "marshal.mp3",
-  "shorty.mp3",
-  "sheriff.mp3",
-  "ghost.mp3",
-  "vandal.mp3",
-  "bulldog.mp3",
-  "phantom.mp3",
-  "odin.mp3",
-  "spectre.mp3",
-];
-
-const vennAudioCache = new Map();
-let activeVennAudio = null;
-
 const FALLBACK_AGENTS = [
   "astra",
   "breach",
@@ -188,7 +170,6 @@ async function initTripletLocks() {
   }
 
   bindTripletButtons();
-  bindVennHoverAudio();
   renderAllTriplets();
 }
 
@@ -321,18 +302,6 @@ function renderVenn(triplet) {
   const agentEl = venn.querySelector("[data-venn-agent]");
   const mapImg = venn.querySelector("[data-venn-map-img]");
   const agentImg = venn.querySelector("[data-venn-agent-img]");
-  const diagram = venn.querySelector(".venn-diagram");
-
-  const pickRate = countAgentPickRate({
-    agent,
-    map,
-    year,
-  });
-
-  if (diagram) {
-    diagram.dataset.pickRate = String(clampPickRate(pickRate));
-    diagram.title = `Pick rate: ${formatRate(pickRate)}%`;
-  }
 
   if (yearEl) {
     yearEl.textContent = String(year);
@@ -357,91 +326,19 @@ function renderVenn(triplet) {
   }
 }
 
-/* =========================================================
-   Hover y audio de los diagramas de Venn
-   ========================================================= */
-
-function bindVennHoverAudio() {
-  document.querySelectorAll(".venn-diagram").forEach((diagram) => {
-    if (diagram.dataset.audioBound === "true") return;
-
-    diagram.dataset.audioBound = "true";
-
-    diagram.addEventListener("mouseenter", () => {
-      playVennPickRateAudio(diagram);
-    });
-
-    diagram.addEventListener("mouseleave", stopVennPickRateAudio);
-  });
-}
-
-function playVennPickRateAudio(diagram) {
-  const pickRate = clampPickRate(diagram.dataset.pickRate);
-  const audioPath = getPickRateAudioPath(pickRate);
-  const audio = getVennAudio(audioPath);
-
-  stopVennPickRateAudio();
-
-  audio.currentTime = 0;
-  audio.volume = pickRate / 100;
-  activeVennAudio = audio;
-
-  audio.play().catch((error) => {
-    if (activeVennAudio === audio) {
-      activeVennAudio = null;
-    }
-
-    console.warn(`No se pudo reproducir ${audioPath}:`, error);
-  });
-}
-
-function stopVennPickRateAudio() {
-  if (!activeVennAudio) return;
-
-  activeVennAudio.pause();
-  activeVennAudio.currentTime = 0;
-  activeVennAudio = null;
-}
-
-function getPickRateAudioPath(pickRate) {
-  const safeRate = clampPickRate(pickRate);
-  const percentileIndex = safeRate >= 100
-    ? PICK_RATE_AUDIO_FILES.length - 1
-    : Math.floor(safeRate / 10);
-
-  return `${PICK_RATE_AUDIO_BASE}${PICK_RATE_AUDIO_FILES[percentileIndex]}`;
-}
-
-function getVennAudio(audioPath) {
-  if (!vennAudioCache.has(audioPath)) {
-    const audio = new Audio(audioPath);
-    audio.preload = "auto";
-
-    audio.addEventListener("ended", () => {
-      if (activeVennAudio === audio) {
-        activeVennAudio = null;
-      }
-    });
-
-    vennAudioCache.set(audioPath, audio);
-  }
-
-  return vennAudioCache.get(audioPath);
-}
-
-function clampPickRate(value) {
-  const numericValue = Number(value);
-
-  if (!Number.isFinite(numericValue)) return 0;
-
-  return Math.max(0, Math.min(numericValue, 100));
-}
-
 function renderComparisonBars() {
   const container = document.getElementById("comparisonBarsList");
   if (!container) return;
 
   const comparisons = buildComparisonData();
+
+  const globalMax = Math.max(
+    ...comparisons.flatMap((item) => [
+      item.oneScaleValue ?? item.oneValue,
+      item.twoScaleValue ?? item.twoValue,
+    ]),
+    1
+  );
 
   container.innerHTML = "";
 
@@ -460,13 +357,12 @@ function renderComparisonBars() {
     const bars = document.createElement("div");
     bars.className = "compare-bars";
 
-    const maxValue = item.scaleMax ?? Math.max(item.oneValue, item.twoValue, 1);
-
     bars.append(
       createCompareBar({
         label: item.oneLabel,
         value: item.oneValue,
-        maxValue,
+        scaleValue: item.oneScaleValue ?? item.oneValue,
+        maxValue: globalMax,
         unit: item.unit,
       })
     );
@@ -475,7 +371,8 @@ function renderComparisonBars() {
       createCompareBar({
         label: item.twoLabel,
         value: item.twoValue,
-        maxValue,
+        scaleValue: item.twoScaleValue ?? item.twoValue,
+        maxValue: globalMax,
         unit: item.unit,
       })
     );
@@ -485,7 +382,7 @@ function renderComparisonBars() {
   });
 }
 
-function createCompareBar({ label, value, maxValue, unit = "partidas" }) {
+function createCompareBar({ label, value, scaleValue, maxValue, unit = "partidas" }) {
   const row = document.createElement("div");
   row.className = "compare-bar-row";
 
@@ -500,15 +397,13 @@ function createCompareBar({ label, value, maxValue, unit = "partidas" }) {
   fill.className = "compare-bar-fill";
 
   const numericValue = Number(value) || 0;
+  const numericScaleValue = Number(scaleValue) || 0;
 
-  if (numericValue <= 0) {
+  if (numericScaleValue <= 0) {
     fill.classList.add("is-zero");
     fill.style.setProperty("--bar-width", "0%");
   } else {
-    const width = maxValue > 0
-      ? Math.max((numericValue / maxValue) * 100, 1.5)
-      : 0;
-
+    const width = maxValue > 0 ? (numericScaleValue / maxValue) * 100 : 0;
     fill.style.setProperty("--bar-width", `${width}%`);
   }
 
@@ -532,6 +427,57 @@ function buildComparisonData() {
   const one = getTripletValues("one");
   const two = getTripletValues("two");
 
+  const totalMatches = countAllMatches();
+
+  const oneYearMatches = countMatchesByYear(one.year);
+  const twoYearMatches = countMatchesByYear(two.year);
+
+  const oneMapMatches = countMatchesByMap(one.map);
+  const twoMapMatches = countMatchesByMap(two.map);
+
+  const oneMapYearMatches = countMatchesByMapAndYear(one.map, one.year);
+  const twoMapYearMatches = countMatchesByMapAndYear(two.map, two.year);
+
+  const oneAgentRate = countAgentPickRate({
+    agent: one.agent,
+  });
+
+  const twoAgentRate = countAgentPickRate({
+    agent: two.agent,
+  });
+
+  const oneAgentYearRate = countAgentPickRate({
+    agent: one.agent,
+    year: one.year,
+  });
+
+  const twoAgentYearRate = countAgentPickRate({
+    agent: two.agent,
+    year: two.year,
+  });
+
+  const oneAgentMapRate = countAgentPickRate({
+    agent: one.agent,
+    map: one.map,
+  });
+
+  const twoAgentMapRate = countAgentPickRate({
+    agent: two.agent,
+    map: two.map,
+  });
+
+  const oneAgentMapYearRate = countAgentPickRate({
+    agent: one.agent,
+    map: one.map,
+    year: one.year,
+  });
+
+  const twoAgentMapYearRate = countAgentPickRate({
+    agent: two.agent,
+    map: two.map,
+    year: two.year,
+  });
+
   return [
     {
       type: "year",
@@ -539,22 +485,21 @@ function buildComparisonData() {
       unit: "partidas",
       oneLabel: String(one.year),
       twoLabel: String(two.year),
-      oneValue: countMatchesByYear(one.year),
-      twoValue: countMatchesByYear(two.year),
+      oneValue: oneYearMatches,
+      twoValue: twoYearMatches,
+      oneScaleValue: oneYearMatches,
+      twoScaleValue: twoYearMatches,
     },
     {
       type: "agent",
       title: "Pick rate promedio del agente",
       unit: "%",
-      scaleMax: 100,
       oneLabel: formatAgentName(one.agent),
       twoLabel: formatAgentName(two.agent),
-      oneValue: countAgentPickRate({
-        agent: one.agent,
-      }),
-      twoValue: countAgentPickRate({
-        agent: two.agent,
-      }),
+      oneValue: oneAgentRate,
+      twoValue: twoAgentRate,
+      oneScaleValue: getPercentScaleValue(oneAgentRate, totalMatches),
+      twoScaleValue: getPercentScaleValue(twoAgentRate, totalMatches),
     },
     {
       type: "map",
@@ -562,24 +507,21 @@ function buildComparisonData() {
       unit: "partidas",
       oneLabel: capitalize(one.map),
       twoLabel: capitalize(two.map),
-      oneValue: countMatchesByMap(one.map),
-      twoValue: countMatchesByMap(two.map),
+      oneValue: oneMapMatches,
+      twoValue: twoMapMatches,
+      oneScaleValue: oneMapMatches,
+      twoScaleValue: twoMapMatches,
     },
     {
       type: "agent-year",
       title: "Pick rate del agente durante el año",
       unit: "%",
-      scaleMax: 100,
       oneLabel: `${formatAgentName(one.agent)} / ${one.year}`,
       twoLabel: `${formatAgentName(two.agent)} / ${two.year}`,
-      oneValue: countAgentPickRate({
-        agent: one.agent,
-        year: one.year,
-      }),
-      twoValue: countAgentPickRate({
-        agent: two.agent,
-        year: two.year,
-      }),
+      oneValue: oneAgentYearRate,
+      twoValue: twoAgentYearRate,
+      oneScaleValue: getPercentScaleValue(oneAgentYearRate, oneYearMatches),
+      twoScaleValue: getPercentScaleValue(twoAgentYearRate, twoYearMatches),
     },
     {
       type: "map-year",
@@ -587,42 +529,32 @@ function buildComparisonData() {
       unit: "partidas",
       oneLabel: `${capitalize(one.map)} / ${one.year}`,
       twoLabel: `${capitalize(two.map)} / ${two.year}`,
-      oneValue: countMatchesByMapAndYear(one.map, one.year),
-      twoValue: countMatchesByMapAndYear(two.map, two.year),
+      oneValue: oneMapYearMatches,
+      twoValue: twoMapYearMatches,
+      oneScaleValue: oneMapYearMatches,
+      twoScaleValue: twoMapYearMatches,
     },
     {
       type: "agent-map",
       title: "Pick rate del agente en el mapa",
       unit: "%",
-      scaleMax: 100,
       oneLabel: `${formatAgentName(one.agent)} / ${capitalize(one.map)}`,
       twoLabel: `${formatAgentName(two.agent)} / ${capitalize(two.map)}`,
-      oneValue: countAgentPickRate({
-        agent: one.agent,
-        map: one.map,
-      }),
-      twoValue: countAgentPickRate({
-        agent: two.agent,
-        map: two.map,
-      }),
+      oneValue: oneAgentMapRate,
+      twoValue: twoAgentMapRate,
+      oneScaleValue: getPercentScaleValue(oneAgentMapRate, oneMapMatches),
+      twoScaleValue: getPercentScaleValue(twoAgentMapRate, twoMapMatches),
     },
     {
       type: "agent-map-year",
       title: "Pick rate del agente en mapa y año",
       unit: "%",
-      scaleMax: 100,
       oneLabel: `${formatAgentName(one.agent)} / ${capitalize(one.map)} / ${one.year}`,
       twoLabel: `${formatAgentName(two.agent)} / ${capitalize(two.map)} / ${two.year}`,
-      oneValue: countAgentPickRate({
-        agent: one.agent,
-        map: one.map,
-        year: one.year,
-      }),
-      twoValue: countAgentPickRate({
-        agent: two.agent,
-        map: two.map,
-        year: two.year,
-      }),
+      oneValue: oneAgentMapYearRate,
+      twoValue: twoAgentMapYearRate,
+      oneScaleValue: getPercentScaleValue(oneAgentMapYearRate, oneMapYearMatches),
+      twoScaleValue: getPercentScaleValue(twoAgentMapYearRate, twoMapYearMatches),
     },
   ];
 }
@@ -635,6 +567,10 @@ function getTripletValues(triplet) {
     map: tripletState.maps[state.map],
     agent: tripletState.agents[state.agent],
   };
+}
+
+function countAllMatches() {
+  return tripletState.matchRows.length;
 }
 
 function countMatchesByYear(year) {
@@ -660,10 +596,12 @@ function countMatchesByMapAndYear(map, year) {
   }).length;
 }
 
-/* =========================================================
-   Cálculo de agentes igual a script.js:
-   usa Pick Rate promedio, no cantidad de selecciones.
-   ========================================================= */
+function getPercentScaleValue(rate, baseMatches) {
+  const numericRate = Number(rate) || 0;
+  const numericBase = Number(baseMatches) || 0;
+
+  return numericBase * (numericRate / 100);
+}
 
 function countAgentPickRate({ agent, map, year }) {
   if (year) {
@@ -773,10 +711,6 @@ function equalsIgnoreCase(a, b) {
   return normalizeLabel(a) === normalizeLabel(b);
 }
 
-/* =========================================================
-   LocalStorage
-   ========================================================= */
-
 function saveTripletState() {
   const payload = {
     one: getStoredTriplet("one"),
@@ -841,10 +775,6 @@ function applyStoredTriplet(triplet, stored) {
     tripletState[triplet].agent = agentIndex;
   }
 }
-
-/* =========================================================
-   Utilidades
-   ========================================================= */
 
 function getListByField(field) {
   if (field === "year") return tripletState.years;

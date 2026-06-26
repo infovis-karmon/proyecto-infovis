@@ -624,7 +624,6 @@
   }
 }
 
-/* Hover moderno y sutil para los diagramas de Venn. */
 .venn-diagram {
   cursor: pointer;
   transform: scale(1);
